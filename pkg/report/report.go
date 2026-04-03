@@ -83,7 +83,6 @@ func Generate(outputPath string, data *analyzer.Report) error {
 			for k := range m {
 				keys = append(keys, k)
 			}
-			// simple sort
 			for i := 0; i < len(keys); i++ {
 				for j := i + 1; j < len(keys); j++ {
 					if keys[i] > keys[j] {
@@ -92,6 +91,29 @@ func Generate(outputPath string, data *analyzer.Report) error {
 				}
 			}
 			return keys
+		},
+		"topNAuthors": func(authors []analyzer.AuthorMetrics, n int) []analyzer.AuthorMetrics {
+			if len(authors) <= n {
+				return authors
+			}
+			return authors[:n]
+		},
+		"topNPeriod": func(data []analyzer.AuthorPeriodData, n int) []analyzer.AuthorPeriodData {
+			if len(data) <= n {
+				return data
+			}
+			return data[:n]
+		},
+		"seq": func(n int) []int {
+			s := make([]int, n)
+			for i := range s {
+				s[i] = i
+			}
+			return s
+		},
+		"slugify": func(s string) string {
+			r := strings.NewReplacer(" ", "-", "/", "-", ".", "-")
+			return r.Replace(strings.ToLower(s))
 		},
 	}
 

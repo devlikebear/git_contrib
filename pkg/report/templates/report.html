@@ -35,9 +35,8 @@ body {
 
 header {
     text-align: center;
-    padding: 3rem 0;
-    border-bottom: 1px solid var(--border);
-    margin-bottom: 2rem;
+    padding: 3rem 0 1.5rem;
+    margin-bottom: 0;
 }
 
 header h1 {
@@ -55,23 +54,62 @@ header .meta {
     font-size: 0.85rem;
 }
 
-header .stats-bar {
+/* ── Top-level repo tabs ── */
+.repo-tab-bar {
+    display: flex;
+    gap: 0;
+    border-bottom: 2px solid var(--border);
+    margin-bottom: 2rem;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+}
+
+.repo-tab-btn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    padding: 0.75rem 1.5rem;
+    background: none;
+    border: none;
+    color: var(--text2);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    transition: all 0.2s;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.repo-tab-btn:hover { color: var(--text); background: var(--surface); }
+.repo-tab-btn.active {
+    color: var(--accent2);
+    border-bottom-color: var(--accent2);
+    background: var(--surface);
+}
+
+.repo-tab-panel { display: none; }
+.repo-tab-panel.active { display: block; }
+
+/* ── Stats bar ── */
+.stats-bar {
     display: flex;
     justify-content: center;
     gap: 2.5rem;
-    margin-top: 1.5rem;
+    margin: 1.5rem 0 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border);
 }
 
-header .stat-item { text-align: center; }
+.stat-item { text-align: center; }
 
-header .stat-num {
+.stat-num {
     font-family: 'JetBrains Mono', monospace;
     font-size: 1.8rem;
     font-weight: 700;
     color: var(--text);
 }
 
-header .stat-label {
+.stat-label {
     font-size: 0.75rem;
     color: var(--text2);
     text-transform: uppercase;
@@ -138,9 +176,11 @@ tbody tr:hover { background: var(--surface2); }
 
 td { padding: 0.55rem 0.75rem; }
 td.rank { text-align: center; width: 3rem; font-size: 1rem; }
-td.author {
+td.author-cell {
     text-align: left;
     font-weight: 500;
+}
+td.author-cell .author-inner {
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -168,22 +208,6 @@ td.period {
     flex-shrink: 0;
 }
 
-.repo-block {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 1.25rem;
-    margin-bottom: 1rem;
-}
-
-.repo-block table { font-size: 0.8rem; }
-
-.repo-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
-    gap: 1rem;
-}
-
 .period-table-wrap {
     overflow-x: auto;
     border: 1px solid var(--border);
@@ -193,6 +217,7 @@ td.period {
 
 .period-table { min-width: 600px; }
 
+/* ── Period sub-tabs ── */
 .tab-bar {
     display: flex;
     gap: 0;
@@ -222,27 +247,32 @@ td.period {
 .tab-content { display: none; padding-top: 1rem; }
 .tab-content.active { display: block; }
 
+/* ── Bar chart ── */
 .chart-container {
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 8px;
     padding: 1.5rem;
     margin-bottom: 1.5rem;
+    overflow-x: auto;
 }
 
 .bar-chart {
     display: flex;
     align-items: flex-end;
-    gap: 1rem;
+    gap: 0.5rem;
     height: 200px;
     padding: 1rem 0;
+    min-width: 0;
 }
 
 .bar-group {
     display: flex;
     flex-direction: column;
     align-items: center;
-    flex: 1;
+    flex: 1 1 0;
+    min-width: 40px;
+    max-width: 80px;
     height: 100%;
     justify-content: flex-end;
 }
@@ -259,11 +289,11 @@ td.period {
 
 .bar-label {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 0.65rem;
+    font-size: 0.6rem;
     color: var(--text2);
-    margin-top: 0.5rem;
+    margin-top: 0.4rem;
     text-align: center;
-    max-width: 80px;
+    width: 100%;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -271,9 +301,9 @@ td.period {
 
 .bar-value {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 0.7rem;
+    font-size: 0.65rem;
     color: var(--text);
-    margin-bottom: 0.3rem;
+    margin-bottom: 0.2rem;
     font-weight: 600;
 }
 
@@ -289,8 +319,7 @@ footer {
 @media (max-width: 768px) {
     body { padding: 1rem; }
     header h1 { font-size: 1.4rem; }
-    .repo-grid { grid-template-columns: 1fr; }
-    header .stats-bar { flex-wrap: wrap; gap: 1.5rem; }
+    .stats-bar { flex-wrap: wrap; gap: 1.5rem; }
 }
 </style>
 </head>
@@ -300,33 +329,48 @@ footer {
 <header>
     <h1>⚡ Git Contribution Report</h1>
     <div class="meta">{{.Since}} → {{.Until}} · {{.TotalRepos}} repos · {{len .Authors}} developers</div>
-    <div class="stats-bar">
-        <div class="stat-item">
-            <div class="stat-num">{{formatNum .TotalCommits}}</div>
-            <div class="stat-label">총 커밋</div>
-        </div>
-        <div class="stat-item">
-            <div class="stat-num">{{formatNum .TotalAdditions}}</div>
-            <div class="stat-label">추가 라인</div>
-        </div>
-        <div class="stat-item">
-            <div class="stat-num">{{formatNum .TotalDeletions}}</div>
-            <div class="stat-label">삭제 라인</div>
-        </div>
-        <div class="stat-item">
-            <div class="stat-num">{{formatNum .TotalActiveDays}}</div>
-            <div class="stat-label">활동 일수</div>
-        </div>
-    </div>
 </header>
 
-<!-- Chart: Commits -->
+<!-- ══ Top-level repo tabs ══ -->
+<div class="repo-tab-bar">
+    <button class="repo-tab-btn active" onclick="switchRepoTab('overall')">📊 종합</button>
+    {{range .RepoReports}}
+    <button class="repo-tab-btn" onclick="switchRepoTab('repo-{{slugify .Name}}')">📁 {{.Name}}</button>
+    {{end}}
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!-- ══ Overall (종합) panel ══ -->
+<!-- ══════════════════════════════════════════ -->
+<div id="panel-overall" class="repo-tab-panel active">
+
+<div class="stats-bar">
+    <div class="stat-item">
+        <div class="stat-num">{{formatNum .TotalCommits}}</div>
+        <div class="stat-label">총 커밋</div>
+    </div>
+    <div class="stat-item">
+        <div class="stat-num">{{formatNum .TotalAdditions}}</div>
+        <div class="stat-label">추가 라인</div>
+    </div>
+    <div class="stat-item">
+        <div class="stat-num">{{formatNum .TotalDeletions}}</div>
+        <div class="stat-label">삭제 라인</div>
+    </div>
+    <div class="stat-item">
+        <div class="stat-num">{{formatNum .TotalActiveDays}}</div>
+        <div class="stat-label">활동 일수</div>
+    </div>
+</div>
+
+<!-- Chart: Top 20 -->
+{{$top20 := topNAuthors .Authors 20}}
 <section>
-    <h2>📊 커밋 수 비교</h2>
+    <h2>📊 커밋 수 비교 (Top 20)</h2>
     <div class="chart-container">
         <div class="bar-chart">
-            {{$maxCommits := maxCommits .Authors}}
-            {{range $i, $a := .Authors}}
+            {{$maxCommits := maxCommits $top20}}
+            {{range $i, $a := $top20}}
             <div class="bar-group">
                 <div class="bar-value">{{formatNum $a.TotalCommits}}</div>
                 <div class="bar" style="height:{{pct $a.TotalCommits $maxCommits}}%;background:{{paletteColor $i $.Palette}}"></div>
@@ -337,7 +381,7 @@ footer {
     </div>
 </section>
 
-<!-- Summary Table -->
+<!-- Summary Table (all authors) -->
 <section>
     <h2>🏆 개발자 종합 순위</h2>
     <div class="period-table-wrap">
@@ -360,7 +404,7 @@ footer {
             {{range $i, $a := .Authors}}
             <tr>
                 <td class="rank">{{rankBadge $i}}</td>
-                <td class="author"><span class="dot" style="background:{{paletteColor $i $.Palette}}"></span>{{$a.Name}}</td>
+                <td class="author-cell"><div class="author-inner"><span class="dot" style="background:{{paletteColor $i $.Palette}}"></span>{{$a.Name}}</div></td>
                 <td class="num">{{formatNum $a.TotalCommits}}</td>
                 <td class="num add">+{{formatNum $a.Additions}}</td>
                 <td class="num del">-{{formatNum $a.Deletions}}</td>
@@ -376,35 +420,37 @@ footer {
     </div>
 </section>
 
-<!-- Period tabs -->
+<!-- Period tabs (Top 20 authors) -->
+{{$top20Period := topNPeriod .Daily 20}}
+{{$top20Weekly := topNPeriod .Weekly 20}}
+{{$top20Monthly := topNPeriod .Monthly 20}}
 <section>
-    <h2>📅 기간별 상세</h2>
+    <h2>📅 기간별 상세 (Top 20)</h2>
     <div class="tab-bar">
-        <button class="tab-btn active" onclick="switchTab('daily')">일간</button>
-        <button class="tab-btn" onclick="switchTab('weekly')">주간</button>
-        <button class="tab-btn" onclick="switchTab('monthly')">월간</button>
+        <button class="tab-btn active" onclick="switchPeriodTab(this, 'overall-daily')">일간</button>
+        <button class="tab-btn" onclick="switchPeriodTab(this, 'overall-weekly')">주간</button>
+        <button class="tab-btn" onclick="switchPeriodTab(this, 'overall-monthly')">월간</button>
     </div>
 
-    <!-- Daily -->
-    <div id="tab-daily" class="tab-content active">
+    <div id="tab-overall-daily" class="tab-content active">
         {{if .AllDays}}
         <div class="period-table-wrap">
             <table class="period-table">
                 <thead>
                     <tr>
                         <th>날짜</th>
-                        {{range $.Authors}}<th colspan="2">{{.Name}}</th>{{end}}
+                        {{range $top20Period}}<th colspan="2">{{.Author}}</th>{{end}}
                     </tr>
                     <tr class="sub-header">
                         <th></th>
-                        {{range $.Authors}}<th>커밋</th><th>LOC</th>{{end}}
+                        {{range $top20Period}}<th>커밋</th><th>LOC</th>{{end}}
                     </tr>
                 </thead>
                 <tbody>
-                    {{range $day := .AllDays}}
+                    {{range $day := $.AllDays}}
                     <tr>
                         <td class="period">{{$day}}</td>
-                        {{range $j, $apd := $.Daily}}
+                        {{range $apd := $top20Period}}
                             {{$entry := getPeriodEntry $apd $day}}
                             {{if $entry}}
                             <td class="num has-val">{{$entry.Commits}}</td>
@@ -419,31 +465,28 @@ footer {
                 </tbody>
             </table>
         </div>
-        {{else}}
-        <p>해당 기간에 데이터가 없습니다.</p>
-        {{end}}
+        {{else}}<p>해당 기간에 데이터가 없습니다.</p>{{end}}
     </div>
 
-    <!-- Weekly -->
-    <div id="tab-weekly" class="tab-content">
+    <div id="tab-overall-weekly" class="tab-content">
         {{if .AllWeeks}}
         <div class="period-table-wrap">
             <table class="period-table">
                 <thead>
                     <tr>
                         <th>주차</th>
-                        {{range $.Authors}}<th colspan="2">{{.Name}}</th>{{end}}
+                        {{range $top20Weekly}}<th colspan="2">{{.Author}}</th>{{end}}
                     </tr>
                     <tr class="sub-header">
                         <th></th>
-                        {{range $.Authors}}<th>커밋</th><th>LOC</th>{{end}}
+                        {{range $top20Weekly}}<th>커밋</th><th>LOC</th>{{end}}
                     </tr>
                 </thead>
                 <tbody>
-                    {{range $week := .AllWeeks}}
+                    {{range $week := $.AllWeeks}}
                     <tr>
                         <td class="period">{{$week}}</td>
-                        {{range $j, $apd := $.Weekly}}
+                        {{range $apd := $top20Weekly}}
                             {{$entry := getPeriodEntry $apd $week}}
                             {{if $entry}}
                             <td class="num has-val">{{$entry.Commits}}</td>
@@ -458,31 +501,28 @@ footer {
                 </tbody>
             </table>
         </div>
-        {{else}}
-        <p>해당 기간에 데이터가 없습니다.</p>
-        {{end}}
+        {{else}}<p>해당 기간에 데이터가 없습니다.</p>{{end}}
     </div>
 
-    <!-- Monthly -->
-    <div id="tab-monthly" class="tab-content">
+    <div id="tab-overall-monthly" class="tab-content">
         {{if .AllMonths}}
         <div class="period-table-wrap">
             <table class="period-table">
                 <thead>
                     <tr>
                         <th>월</th>
-                        {{range $.Authors}}<th colspan="2">{{.Name}}</th>{{end}}
+                        {{range $top20Monthly}}<th colspan="2">{{.Author}}</th>{{end}}
                     </tr>
                     <tr class="sub-header">
                         <th></th>
-                        {{range $.Authors}}<th>커밋</th><th>LOC</th>{{end}}
+                        {{range $top20Monthly}}<th>커밋</th><th>LOC</th>{{end}}
                     </tr>
                 </thead>
                 <tbody>
-                    {{range $month := .AllMonths}}
+                    {{range $month := $.AllMonths}}
                     <tr>
                         <td class="period">{{$month}}</td>
-                        {{range $j, $apd := $.Monthly}}
+                        {{range $apd := $top20Monthly}}
                             {{$entry := getPeriodEntry $apd $month}}
                             {{if $entry}}
                             <td class="num has-val">{{$entry.Commits}}</td>
@@ -497,40 +537,195 @@ footer {
                 </tbody>
             </table>
         </div>
-        {{else}}
-        <p>해당 기간에 데이터가 없습니다.</p>
-        {{end}}
+        {{else}}<p>해당 기간에 데이터가 없습니다.</p>{{end}}
     </div>
 </section>
 
-<!-- Repo breakdown -->
+</div><!-- /panel-overall -->
+
+<!-- ══════════════════════════════════════════ -->
+<!-- ══ Per-repo panels ══ -->
+<!-- ══════════════════════════════════════════ -->
+{{range $rr := .RepoReports}}
+<div id="panel-repo-{{slugify $rr.Name}}" class="repo-tab-panel">
+
+<div class="stats-bar">
+    <div class="stat-item">
+        <div class="stat-num">{{formatNum $rr.TotalCommits}}</div>
+        <div class="stat-label">총 커밋</div>
+    </div>
+    <div class="stat-item">
+        <div class="stat-num">{{formatNum $rr.TotalAdditions}}</div>
+        <div class="stat-label">추가 라인</div>
+    </div>
+    <div class="stat-item">
+        <div class="stat-num">{{formatNum $rr.TotalDeletions}}</div>
+        <div class="stat-label">삭제 라인</div>
+    </div>
+    <div class="stat-item">
+        <div class="stat-num">{{formatNum $rr.TotalActiveDays}}</div>
+        <div class="stat-label">활동 일수</div>
+    </div>
+</div>
+
+{{$rTop20 := topNAuthors $rr.Authors 20}}
 <section>
-    <h2>📁 리포지토리별 기여도</h2>
-    <div class="repo-grid">
-        {{$palette := .Palette}}
-        {{range $repo := sortedRepoNames .RepoBreakdown}}
-        <div class="repo-block">
-            <h3>📁 {{$repo}}</h3>
-            <table>
+    <h2>📊 커밋 수 비교 (Top 20)</h2>
+    <div class="chart-container">
+        <div class="bar-chart">
+            {{$rMax := maxCommits $rTop20}}
+            {{range $i, $a := $rTop20}}
+            <div class="bar-group">
+                <div class="bar-value">{{formatNum $a.TotalCommits}}</div>
+                <div class="bar" style="height:{{pct $a.TotalCommits $rMax}}%;background:{{paletteColor $i $.Palette}}"></div>
+                <div class="bar-label" title="{{$a.Name}}">{{$a.Name}}</div>
+            </div>
+            {{end}}
+        </div>
+    </div>
+</section>
+
+<section>
+    <h2>🏆 개발자 순위</h2>
+    <div class="period-table-wrap">
+    <table>
+        <thead>
+            <tr>
+                <th></th>
+                <th>개발자</th>
+                <th>커밋</th>
+                <th>추가</th>
+                <th>삭제</th>
+                <th>순증감</th>
+                <th>활동일</th>
+                <th>일평균 커밋</th>
+                <th>일평균 LOC</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{range $i, $a := $rr.Authors}}
+            <tr>
+                <td class="rank">{{rankBadge $i}}</td>
+                <td class="author-cell"><div class="author-inner"><span class="dot" style="background:{{paletteColor $i $.Palette}}"></span>{{$a.Name}}</div></td>
+                <td class="num">{{formatNum $a.TotalCommits}}</td>
+                <td class="num add">+{{formatNum $a.Additions}}</td>
+                <td class="num del">-{{formatNum $a.Deletions}}</td>
+                <td class="num net">{{signedNum $a.NetLOC}}</td>
+                <td class="num">{{$a.ActiveDays}}</td>
+                <td class="num">{{fmtFloat1 $a.AvgCommitsPerDay}}</td>
+                <td class="num">{{fmtFloat0 $a.AvgLOCPerDay}}</td>
+            </tr>
+            {{end}}
+        </tbody>
+    </table>
+    </div>
+</section>
+
+{{$rSlug := slugify $rr.Name}}
+{{$rTop20D := topNPeriod $rr.Daily 20}}
+{{$rTop20W := topNPeriod $rr.Weekly 20}}
+{{$rTop20M := topNPeriod $rr.Monthly 20}}
+<section>
+    <h2>📅 기간별 상세 (Top 20)</h2>
+    <div class="tab-bar">
+        <button class="tab-btn active" onclick="switchPeriodTab(this, '{{$rSlug}}-daily')">일간</button>
+        <button class="tab-btn" onclick="switchPeriodTab(this, '{{$rSlug}}-weekly')">주간</button>
+        <button class="tab-btn" onclick="switchPeriodTab(this, '{{$rSlug}}-monthly')">월간</button>
+    </div>
+
+    <div id="tab-{{$rSlug}}-daily" class="tab-content active">
+        {{if $rr.AllDays}}
+        <div class="period-table-wrap">
+            <table class="period-table">
                 <thead>
-                    <tr><th></th><th>개발자</th><th>커밋</th><th>추가</th><th>삭제</th></tr>
+                    <tr><th>날짜</th>{{range $rTop20D}}<th colspan="2">{{.Author}}</th>{{end}}</tr>
+                    <tr class="sub-header"><th></th>{{range $rTop20D}}<th>커밋</th><th>LOC</th>{{end}}</tr>
                 </thead>
                 <tbody>
-                    {{range $i, $entry := index $.RepoBreakdown $repo}}
+                    {{range $day := $rr.AllDays}}
                     <tr>
-                        <td class="rank">{{rankBadge $i}}</td>
-                        <td class="author">{{$entry.Author}}</td>
-                        <td class="num">{{formatNum $entry.Commits}}</td>
-                        <td class="num add">+{{formatNum $entry.Additions}}</td>
-                        <td class="num del">-{{formatNum $entry.Deletions}}</td>
+                        <td class="period">{{$day}}</td>
+                        {{range $apd := $rTop20D}}
+                            {{$entry := getPeriodEntry $apd $day}}
+                            {{if $entry}}
+                            <td class="num has-val">{{$entry.Commits}}</td>
+                            <td class="num has-val loc">{{add $entry.Additions $entry.Deletions}}</td>
+                            {{else}}
+                            <td class="num zero">·</td>
+                            <td class="num zero loc">·</td>
+                            {{end}}
+                        {{end}}
                     </tr>
                     {{end}}
                 </tbody>
             </table>
         </div>
-        {{end}}
+        {{else}}<p>해당 기간에 데이터가 없습니다.</p>{{end}}
+    </div>
+
+    <div id="tab-{{$rSlug}}-weekly" class="tab-content">
+        {{if $rr.AllWeeks}}
+        <div class="period-table-wrap">
+            <table class="period-table">
+                <thead>
+                    <tr><th>주차</th>{{range $rTop20W}}<th colspan="2">{{.Author}}</th>{{end}}</tr>
+                    <tr class="sub-header"><th></th>{{range $rTop20W}}<th>커밋</th><th>LOC</th>{{end}}</tr>
+                </thead>
+                <tbody>
+                    {{range $week := $rr.AllWeeks}}
+                    <tr>
+                        <td class="period">{{$week}}</td>
+                        {{range $apd := $rTop20W}}
+                            {{$entry := getPeriodEntry $apd $week}}
+                            {{if $entry}}
+                            <td class="num has-val">{{$entry.Commits}}</td>
+                            <td class="num has-val loc">{{add $entry.Additions $entry.Deletions}}</td>
+                            {{else}}
+                            <td class="num zero">·</td>
+                            <td class="num zero loc">·</td>
+                            {{end}}
+                        {{end}}
+                    </tr>
+                    {{end}}
+                </tbody>
+            </table>
+        </div>
+        {{else}}<p>해당 기간에 데이터가 없습니다.</p>{{end}}
+    </div>
+
+    <div id="tab-{{$rSlug}}-monthly" class="tab-content">
+        {{if $rr.AllMonths}}
+        <div class="period-table-wrap">
+            <table class="period-table">
+                <thead>
+                    <tr><th>월</th>{{range $rTop20M}}<th colspan="2">{{.Author}}</th>{{end}}</tr>
+                    <tr class="sub-header"><th></th>{{range $rTop20M}}<th>커밋</th><th>LOC</th>{{end}}</tr>
+                </thead>
+                <tbody>
+                    {{range $month := $rr.AllMonths}}
+                    <tr>
+                        <td class="period">{{$month}}</td>
+                        {{range $apd := $rTop20M}}
+                            {{$entry := getPeriodEntry $apd $month}}
+                            {{if $entry}}
+                            <td class="num has-val">{{$entry.Commits}}</td>
+                            <td class="num has-val loc">{{add $entry.Additions $entry.Deletions}}</td>
+                            {{else}}
+                            <td class="num zero">·</td>
+                            <td class="num zero loc">·</td>
+                            {{end}}
+                        {{end}}
+                    </tr>
+                    {{end}}
+                </tbody>
+            </table>
+        </div>
+        {{else}}<p>해당 기간에 데이터가 없습니다.</p>{{end}}
     </div>
 </section>
+
+</div><!-- /panel-repo -->
+{{end}}
 
 <footer>
     Generated by git-contrib · {{.GeneratedAt}}
@@ -539,11 +734,20 @@ footer {
 </div>
 
 <script>
-function switchTab(tab) {
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-    event.target.classList.add('active');
-    document.getElementById('tab-' + tab).classList.add('active');
+function switchRepoTab(id) {
+    document.querySelectorAll('.repo-tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.repo-tab-panel').forEach(p => p.classList.remove('active'));
+    event.currentTarget.classList.add('active');
+    document.getElementById('panel-' + id).classList.add('active');
+}
+
+function switchPeriodTab(btn, id) {
+    const bar = btn.parentElement;
+    bar.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const section = bar.parentElement;
+    section.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    document.getElementById('tab-' + id).classList.add('active');
 }
 </script>
 </body>

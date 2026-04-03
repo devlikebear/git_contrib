@@ -120,6 +120,24 @@ func Analyze(commits []git.Commit, since, until string) *Report {
 		repoBreakdown[repo] = entries
 	}
 
+	// Build per-repo reports
+	repoCommits := make(map[string][]git.Commit)
+	for _, c := range commits {
+		repoCommits[c.RepoName] = append(repoCommits[c.RepoName], c)
+	}
+	repoNames := sortedStringSet(func() map[string]bool {
+		m := make(map[string]bool)
+		for k := range repoCommits {
+			m[k] = true
+		}
+		return m
+	}())
+	var repoReports []RepoReport
+	for _, rn := range repoNames {
+		rr := buildRepoReport(rn, repoCommits[rn])
+		repoReports = append(repoReports, rr)
+	}
+
 	totalAdd, totalDel := 0, 0
 	for _, c := range commits {
 		totalAdd += c.Additions
@@ -142,8 +160,98 @@ func Analyze(commits []git.Commit, since, until string) *Report {
 		AllWeeks:        sortedStringSet(allWeeks),
 		AllMonths:       sortedStringSet(allMonths),
 		RepoBreakdown:   repoBreakdown,
+		RepoReports:     repoReports,
 		Palette:         defaultPalette,
 		GeneratedAt:     time.Now().Format("2006-01-02 15:04"),
+	}
+}
+
+func buildRepoReport(name string, commits []git.Commit) RepoReport {
+	type authorAcc struct {
+		commits    int
+		additions  int
+		deletions  int
+		activeDays map[string]bool
+	}
+
+	authors := make(map[string]*authorAcc)
+	dailyMap := make(map[string]map[string]*PeriodEntry)
+	weeklyMap := make(map[string]map[string]*PeriodEntry)
+	monthlyMap := make(map[string]map[string]*PeriodEntry)
+	allDays := make(map[string]bool)
+	allWeeks := make(map[string]bool)
+	allMonths := make(map[string]bool)
+
+	for _, c := range commits {
+		a := c.Author
+		if _, ok := authors[a]; !ok {
+			authors[a] = &authorAcc{activeDays: make(map[string]bool)}
+		}
+		acc := authors[a]
+		acc.commits++
+		acc.additions += c.Additions
+		acc.deletions += c.Deletions
+		acc.activeDays[c.Date.Format("2006-01-02")] = true
+
+		dayKey := c.Date.Format("2006-01-02")
+		year, week := c.Date.ISOWeek()
+		weekKey := fmt.Sprintf("%d-W%02d", year, week)
+		monthKey := c.Date.Format("2006-01")
+
+		allDays[dayKey] = true
+		allWeeks[weekKey] = true
+		allMonths[monthKey] = true
+
+		addToPeriod(dailyMap, a, dayKey, c)
+		addToPeriod(weeklyMap, a, weekKey, c)
+		addToPeriod(monthlyMap, a, monthKey, c)
+	}
+
+	var authorList []AuthorMetrics
+	for aName, acc := range authors {
+		days := len(acc.activeDays)
+		avgCommits := 0.0
+		avgLOC := 0.0
+		if days > 0 {
+			avgCommits = float64(acc.commits) / float64(days)
+			avgLOC = float64(acc.additions+acc.deletions) / float64(days)
+		}
+		authorList = append(authorList, AuthorMetrics{
+			Name:             aName,
+			TotalCommits:     acc.commits,
+			Additions:        acc.additions,
+			Deletions:        acc.deletions,
+			NetLOC:           acc.additions - acc.deletions,
+			ActiveDays:       days,
+			RepoCount:        1,
+			Repos:            []string{name},
+			AvgCommitsPerDay: avgCommits,
+			AvgLOCPerDay:     avgLOC,
+		})
+	}
+	sort.Slice(authorList, func(i, j int) bool {
+		return authorList[i].TotalCommits > authorList[j].TotalCommits
+	})
+
+	totalAdd, totalDel := 0, 0
+	for _, c := range commits {
+		totalAdd += c.Additions
+		totalDel += c.Deletions
+	}
+
+	return RepoReport{
+		Name:            name,
+		TotalCommits:    len(commits),
+		TotalAdditions:  totalAdd,
+		TotalDeletions:  totalDel,
+		TotalActiveDays: len(allDays),
+		Authors:         authorList,
+		Daily:           buildAuthorPeriodList(authorList, dailyMap),
+		Weekly:          buildAuthorPeriodList(authorList, weeklyMap),
+		Monthly:         buildAuthorPeriodList(authorList, monthlyMap),
+		AllDays:         sortedStringSet(allDays),
+		AllWeeks:        sortedStringSet(allWeeks),
+		AllMonths:       sortedStringSet(allMonths),
 	}
 }
 

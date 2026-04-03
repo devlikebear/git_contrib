@@ -32,6 +32,21 @@ type RepoAuthorEntry struct {
 	Deletions int
 }
 
+type RepoReport struct {
+	Name            string
+	TotalCommits    int
+	TotalAdditions  int
+	TotalDeletions  int
+	TotalActiveDays int
+	Authors         []AuthorMetrics
+	Daily           []AuthorPeriodData
+	Weekly          []AuthorPeriodData
+	Monthly         []AuthorPeriodData
+	AllDays         []string
+	AllWeeks        []string
+	AllMonths       []string
+}
+
 type Report struct {
 	Since           string
 	Until           string
@@ -48,6 +63,7 @@ type Report struct {
 	AllWeeks        []string
 	AllMonths       []string
 	RepoBreakdown   map[string][]RepoAuthorEntry
+	RepoReports     []RepoReport
 	Palette         []string
 	GeneratedAt     string
 }
