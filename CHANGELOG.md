@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.3.0] - 2026-04-04
+
+### Added
+- JSON 출력 포맷 — 파일 확장자로 자동 감지 (`-o report.json`)
+- 전체 분석 결과를 구조화된 JSON으로 내보내기 (authors, daily/weekly/monthly, repo_reports 등)
+
 ## [0.2.0] - 2026-04-04
 
 ### Added
@@ -30,5 +36,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - GitHub Actions: 태그 푸시 시 자동 릴리즈 + Homebrew Tap 갱신
 - Homebrew 설치 지원 (`brew install devlikebear/tap/git-contrib`)
 
+[0.3.0]: https://github.com/devlikebear/git_contrib/releases/tag/v0.3.0
 [0.2.0]: https://github.com/devlikebear/git_contrib/releases/tag/v0.2.0
 [0.1.0]: https://github.com/devlikebear/git_contrib/releases/tag/v0.1.0

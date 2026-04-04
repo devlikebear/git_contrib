@@ -1,6 +1,6 @@
 # git-contrib
 
-여러 Git 리포지토리를 분석하여 개발자별 기여 통계를 HTML 리포트로 생성하는 CLI 도구입니다.
+여러 Git 리포지토리를 분석하여 개발자별 기여 통계를 HTML/JSON 리포트로 생성하는 CLI 도구입니다.
 
 ## Features
 
@@ -9,7 +9,9 @@
 - **기간별 상세** — 일간/주간/월간 탭으로 Top 20 개발자의 기간별 활동 확인
 - **리포별 탭** — 종합 + 리포별 독립 분석 (통계, 차트, 순위, 기간별 상세)
 - **타임시리즈 차트** — 일간 활동 라인 차트 (커밋/LOC 전환, 개발자별 필터)
+- **Author alias** — 동일 인물의 여러 git username을 하나로 병합
 - **다크 테마 HTML 리포트** — 단일 HTML 파일, 외부 의존성 없음
+- **JSON 출력** — 분석 결과를 구조화된 JSON으로 내보내기
 
 ## Installation
 
@@ -47,6 +49,12 @@ repos:
   - /path/to/repo1
   - /path/to/repo2
 output: "report.html"
+
+# Author alias mapping (optional, case-insensitive)
+authors:
+  Teknium:
+    - teknium1
+    - teknum
 ```
 
 ### 2. 실행
@@ -60,6 +68,9 @@ git-contrib --repos /path/repo1,/path/repo2 --since 2025-01-01 --until 2025-12-3
 
 # 설정 파일 경로 지정
 git-contrib -c my-config.yaml -o my-report.html
+
+# JSON 출력 (파일 확장자로 자동 감지)
+git-contrib -o report.json
 ```
 
 ### 3. 리포트 확인
