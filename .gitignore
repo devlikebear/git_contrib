@@ -1,3 +1,5 @@
 bin/
+dist/
 *.html
 !pkg/report/templates/report.html
+config.yaml

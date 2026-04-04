@@ -11,6 +11,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var version = "dev"
+
 func main() {
 	var (
 		cfgPath string
@@ -21,9 +23,10 @@ func main() {
 	)
 
 	rootCmd := &cobra.Command{
-		Use:   "git-contrib",
-		Short: "Git 멀티리포 개발자 기여도 분석 도구",
-		Long:  "여러 Git 리포지토리를 분석하여 개발자별 기여 통계를 HTML 리포트로 생성합니다.",
+		Use:     "git-contrib",
+		Short:   "Git 멀티리포 개발자 기여도 분석 도구",
+		Long:    "여러 Git 리포지토리를 분석하여 개발자별 기여 통계를 HTML 리포트로 생성합니다.",
+		Version: version,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cfg, err := config.Load(cfgPath)
 			if err != nil {

@@ -1,0 +1,6 @@
+since: "2024-01-01"
+until: "2024-12-31"
+repos:
+  - /path/to/repo1
+  - /path/to/repo2
+output: "report.html"

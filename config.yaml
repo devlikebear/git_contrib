@@ -1,6 +1,0 @@
-since: "2024-01-01"
-until: "2026-12-31"
-repos:
-  - /Users/changheonshin/workspace/opensources/hermes-agent
-  - /Users/changheonshin/workspace/opensources/openclaw
-output: "report.html"

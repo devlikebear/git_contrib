@@ -1,0 +1,124 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          VERSION="${GITHUB_REF#refs/tags/v}"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          version: "~> v2"
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  update-homebrew:
+    needs: release
+    runs-on: ubuntu-latest
+    if: ${{ !contains(needs.release.outputs.version, '-') }}
+    steps:
+      - name: Download release assets and compute checksums
+        id: checksums
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.release.outputs.version }}
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+
+          for arch in arm64 amd64; do
+            asset="git-contrib-v${VERSION}-darwin-${arch}.tar.gz"
+            gh release download "v${VERSION}" \
+              --repo devlikebear/git-contrib \
+              --pattern "${asset}" \
+              --dir dist
+            sha=$(sha256sum "dist/${asset}" | awk '{print $1}')
+            echo "${arch}_sha=${sha}" >> "$GITHUB_OUTPUT"
+          done
+
+      - name: Checkout Homebrew tap
+        uses: actions/checkout@v4
+        with:
+          repository: devlikebear/homebrew-tap
+          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          path: homebrew-tap
+
+      - name: Update formula
+        env:
+          VERSION: ${{ needs.release.outputs.version }}
+          ARM64_SHA: ${{ steps.checksums.outputs.arm64_sha }}
+          AMD64_SHA: ${{ steps.checksums.outputs.amd64_sha }}
+        run: |
+          cat > homebrew-tap/Formula/git-contrib.rb << 'FORMULA'
+          class GitContrib < Formula
+            desc "Git multi-repo developer contribution analyzer with HTML reports"
+            homepage "https://github.com/devlikebear/git-contrib"
+            license "MIT"
+          FORMULA
+
+          cat >> homebrew-tap/Formula/git-contrib.rb << FORMULA
+            version "${VERSION}"
+
+            on_macos do
+              if Hardware::CPU.arm?
+                url "https://github.com/devlikebear/git-contrib/releases/download/v${VERSION}/git-contrib-v${VERSION}-darwin-arm64.tar.gz"
+                sha256 "${ARM64_SHA}"
+              elsif Hardware::CPU.intel?
+                url "https://github.com/devlikebear/git-contrib/releases/download/v${VERSION}/git-contrib-v${VERSION}-darwin-amd64.tar.gz"
+                sha256 "${AMD64_SHA}"
+              end
+            end
+
+            def install
+              bin.install "git-contrib"
+            end
+
+            test do
+              assert_match version.to_s, shell_output("#{bin}/git-contrib --version")
+            end
+          end
+          FORMULA
+
+          # Remove leading whitespace from heredoc
+          sed -i 's/^          //' homebrew-tap/Formula/git-contrib.rb
+
+      - name: Commit and push formula
+        working-directory: homebrew-tap
+        env:
+          VERSION: ${{ needs.release.outputs.version }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Formula/git-contrib.rb
+          if git diff --cached --quiet; then
+            echo "Formula already up to date"
+            exit 0
+          fi
+          git commit -m "git-contrib ${VERSION}"
+          git push origin HEAD:main
