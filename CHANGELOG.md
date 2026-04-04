@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.3.1] - 2026-04-04
+
+### Fixed
+- GoReleaser release repo 이름을 `git-contrib`로 수정 (리포 이름 변경 반영)
+- Homebrew formula 자동 배포 설정 추가 (`brews` 섹션)
+
 ## [0.3.0] - 2026-04-04
 
 ### Added
@@ -36,6 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - GitHub Actions: 태그 푸시 시 자동 릴리즈 + Homebrew Tap 갱신
 - Homebrew 설치 지원 (`brew install devlikebear/tap/git-contrib`)
 
-[0.3.0]: https://github.com/devlikebear/git_contrib/releases/tag/v0.3.0
-[0.2.0]: https://github.com/devlikebear/git_contrib/releases/tag/v0.2.0
-[0.1.0]: https://github.com/devlikebear/git_contrib/releases/tag/v0.1.0
+[0.3.1]: https://github.com/devlikebear/git-contrib/releases/tag/v0.3.1
+[0.3.0]: https://github.com/devlikebear/git-contrib/releases/tag/v0.3.0
+[0.2.0]: https://github.com/devlikebear/git-contrib/releases/tag/v0.2.0
+[0.1.0]: https://github.com/devlikebear/git-contrib/releases/tag/v0.1.0
