@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/devlikebear/git-contrib/pkg/analyzer"
 	"github.com/devlikebear/git-contrib/pkg/config"
@@ -58,6 +59,15 @@ func main() {
 			commits, err := git.CollectAll(cfg.Repos, cfg.Since, cfg.Until)
 			if err != nil {
 				return fmt.Errorf("collect: %w", err)
+			}
+
+			// Apply author aliases
+			if aliasMap := cfg.AuthorAlias(); len(aliasMap) > 0 {
+				for i := range commits {
+					if canonical, ok := aliasMap[strings.ToLower(commits[i].Author)]; ok {
+						commits[i].Author = canonical
+					}
+				}
 			}
 
 			if len(commits) == 0 {

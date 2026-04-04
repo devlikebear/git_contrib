@@ -4,3 +4,14 @@ repos:
   - /path/to/repo1
   - /path/to/repo2
 output: "report.html"
+
+# Author alias mapping (optional)
+# Maps canonical name -> list of aliases (case-insensitive)
+# authors:
+#   Teknium:
+#     - teknium1
+#     - teknum
+#     - Teknium-ai
+#   John Doe:
+#     - john
+#     - johnd

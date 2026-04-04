@@ -4,16 +4,31 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"gopkg.in/yaml.v3"
 )
 
 type Config struct {
-	Since  string   `yaml:"since"`
-	Until  string   `yaml:"until"`
-	Repos  []string `yaml:"repos"`
-	Output string   `yaml:"output"`
+	Since   string              `yaml:"since"`
+	Until   string              `yaml:"until"`
+	Repos   []string            `yaml:"repos"`
+	Output  string              `yaml:"output"`
+	Authors map[string][]string `yaml:"authors"` // canonical name -> aliases
+}
+
+// AuthorAlias builds a reverse map: alias (lowercased) -> canonical name.
+func (c *Config) AuthorAlias() map[string]string {
+	m := make(map[string]string)
+	for canonical, aliases := range c.Authors {
+		lc := strings.ToLower(canonical)
+		m[lc] = canonical
+		for _, alias := range aliases {
+			m[strings.ToLower(alias)] = canonical
+		}
+	}
+	return m
 }
 
 func Load(path string) (*Config, error) {
