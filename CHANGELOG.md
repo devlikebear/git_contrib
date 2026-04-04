@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.2.0] - 2026-04-04
+
+### Added
+- Author alias mapping — 동일 인물의 여러 git username을 하나의 identity로 병합 (`config.yaml`의 `authors` 맵, case-insensitive)
+
 ## [0.1.0] - 2026-04-04
 
 ### Added
@@ -25,4 +30,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - GitHub Actions: 태그 푸시 시 자동 릴리즈 + Homebrew Tap 갱신
 - Homebrew 설치 지원 (`brew install devlikebear/tap/git-contrib`)
 
-[0.1.0]: https://github.com/devlikebear/git-contrib/releases/tag/v0.1.0
+[0.2.0]: https://github.com/devlikebear/git_contrib/releases/tag/v0.2.0
+[0.1.0]: https://github.com/devlikebear/git_contrib/releases/tag/v0.1.0
