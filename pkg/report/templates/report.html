@@ -307,6 +307,130 @@ td.period {
     font-weight: 600;
 }
 
+/* ── Time series chart ── */
+.ts-section { margin-bottom: 3rem; }
+
+.ts-chart-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.ts-canvas-container {
+    position: relative;
+    width: 100%;
+    height: 280px;
+}
+
+.ts-canvas-container canvas {
+    width: 100%;
+    height: 100%;
+}
+
+.ts-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+.ts-controls label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--text2);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.ts-metric-toggle {
+    display: flex;
+    gap: 0;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.ts-metric-btn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    padding: 0.4rem 1rem;
+    background: var(--surface2);
+    border: none;
+    color: var(--text2);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.ts-metric-btn:not(:last-child) {
+    border-right: 1px solid var(--border);
+}
+
+.ts-metric-btn:hover { color: var(--text); }
+.ts-metric-btn.active {
+    background: var(--accent);
+    color: #fff;
+}
+
+.ts-filter-bar {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+    margin-top: 0.75rem;
+}
+
+.ts-author-btn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    padding: 0.3rem 0.7rem;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text2);
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.ts-author-btn:hover { border-color: var(--text2); color: var(--text); }
+.ts-author-btn.active { border-color: var(--accent2); color: var(--text); background: var(--surface); }
+.ts-author-btn .ts-dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+}
+
+.ts-tooltip {
+    position: absolute;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.5rem 0.75rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--text);
+    pointer-events: none;
+    z-index: 100;
+    white-space: nowrap;
+    display: none;
+}
+
+.ts-tooltip .ts-tt-date {
+    color: var(--text2);
+    margin-bottom: 0.25rem;
+}
+
+.ts-tooltip .ts-tt-row {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
 footer {
     text-align: center;
     color: var(--text2);
@@ -378,6 +502,25 @@ footer {
             </div>
             {{end}}
         </div>
+    </div>
+</section>
+
+<!-- Time Series: Daily Activity -->
+<section class="ts-section">
+    <h2>📈 일간 활동 타임시리즈 (Top 20)</h2>
+    <div class="ts-chart-wrap" data-ts-id="overall" data-ts-json='{{timeseriesJSON .AllDays .Daily .Palette 20}}'>
+        <div class="ts-controls">
+            <label>지표:</label>
+            <div class="ts-metric-toggle">
+                <button class="ts-metric-btn active" data-ts-metric="commits">커밋</button>
+                <button class="ts-metric-btn" data-ts-metric="loc">LOC</button>
+            </div>
+        </div>
+        <div class="ts-canvas-container" id="ts-container-overall">
+            <canvas id="ts-canvas-overall"></canvas>
+            <div class="ts-tooltip" id="ts-tooltip-overall"></div>
+        </div>
+        <div class="ts-filter-bar" id="ts-filter-overall"></div>
     </div>
 </section>
 
@@ -547,7 +690,8 @@ footer {
 <!-- ══ Per-repo panels ══ -->
 <!-- ══════════════════════════════════════════ -->
 {{range $rr := .RepoReports}}
-<div id="panel-repo-{{slugify $rr.Name}}" class="repo-tab-panel">
+{{$rSlug := slugify $rr.Name}}
+<div id="panel-repo-{{$rSlug}}" class="repo-tab-panel">
 
 <div class="stats-bar">
     <div class="stat-item">
@@ -582,6 +726,24 @@ footer {
             </div>
             {{end}}
         </div>
+    </div>
+</section>
+
+<section class="ts-section">
+    <h2>📈 일간 활동 타임시리즈 (Top 20)</h2>
+    <div class="ts-chart-wrap" data-ts-id="{{$rSlug}}" data-ts-json='{{timeseriesJSON $rr.AllDays $rr.Daily $.Palette 20}}'>
+        <div class="ts-controls">
+            <label>지표:</label>
+            <div class="ts-metric-toggle">
+                <button class="ts-metric-btn active" data-ts-metric="commits">커밋</button>
+                <button class="ts-metric-btn" data-ts-metric="loc">LOC</button>
+            </div>
+        </div>
+        <div class="ts-canvas-container" id="ts-container-{{$rSlug}}">
+            <canvas id="ts-canvas-{{$rSlug}}"></canvas>
+            <div class="ts-tooltip" id="ts-tooltip-{{$rSlug}}"></div>
+        </div>
+        <div class="ts-filter-bar" id="ts-filter-{{$rSlug}}"></div>
     </div>
 </section>
 
@@ -621,7 +783,6 @@ footer {
     </div>
 </section>
 
-{{$rSlug := slugify $rr.Name}}
 {{$rTop20D := topNPeriod $rr.Daily 20}}
 {{$rTop20W := topNPeriod $rr.Weekly 20}}
 {{$rTop20M := topNPeriod $rr.Monthly 20}}
@@ -739,6 +900,12 @@ function switchRepoTab(id) {
     document.querySelectorAll('.repo-tab-panel').forEach(p => p.classList.remove('active'));
     event.currentTarget.classList.add('active');
     document.getElementById('panel-' + id).classList.add('active');
+    // Re-render charts in newly visible panel (delay needed for layout recalc)
+    setTimeout(() => {
+        for (const chartId in tsState) {
+            tsRender(chartId);
+        }
+    }, 50);
 }
 
 function switchPeriodTab(btn, id) {
@@ -749,6 +916,220 @@ function switchPeriodTab(btn, id) {
     section.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
     document.getElementById('tab-' + id).classList.add('active');
 }
+
+/* ── Time Series Chart Engine ── */
+const tsState = {};
+
+function tsInit(chartId, data) {
+    const visible = {};
+    data.authors.forEach((a, i) => { visible[i] = i < 5; }); // show top 5 by default
+    tsState[chartId] = { data, metric: 'commits', visible };
+    tsRenderFilters(chartId);
+    tsRender(chartId);
+    // Mouse events
+    const container = document.getElementById('ts-container-' + chartId);
+    const canvas = document.getElementById('ts-canvas-' + chartId);
+    canvas.addEventListener('mousemove', e => tsMouseMove(chartId, e));
+    canvas.addEventListener('mouseleave', () => {
+        document.getElementById('ts-tooltip-' + chartId).style.display = 'none';
+    });
+}
+
+function tsSetMetric(chartId, metric, btn) {
+    tsState[chartId].metric = metric;
+    const toggle = btn.parentElement;
+    toggle.querySelectorAll('.ts-metric-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    tsRender(chartId);
+}
+
+// Delegate metric toggle clicks
+document.addEventListener('click', function(e) {
+    const btn = e.target.closest('[data-ts-metric]');
+    if (!btn) return;
+    const wrap = btn.closest('.ts-chart-wrap');
+    if (!wrap) return;
+    const chartId = wrap.getAttribute('data-ts-id');
+    tsSetMetric(chartId, btn.getAttribute('data-ts-metric'), btn);
+});
+
+function tsToggleAuthor(chartId, idx, btn) {
+    tsState[chartId].visible[idx] = !tsState[chartId].visible[idx];
+    btn.classList.toggle('active');
+    tsRender(chartId);
+}
+
+function tsShowAll(chartId) {
+    const s = tsState[chartId];
+    const anyHidden = s.data.authors.some((_, i) => !s.visible[i]);
+    s.data.authors.forEach((_, i) => { s.visible[i] = anyHidden; });
+    document.querySelectorAll('#ts-filter-' + chartId + ' .ts-author-btn[data-idx]').forEach(b => {
+        b.classList.toggle('active', anyHidden);
+    });
+    tsRender(chartId);
+}
+
+function tsRenderFilters(chartId) {
+    const s = tsState[chartId];
+    const bar = document.getElementById('ts-filter-' + chartId);
+    let html = '<button class="ts-author-btn active" onclick="tsShowAll(\'' + chartId + '\')">전체</button>';
+    s.data.authors.forEach((a, i) => {
+        const cls = s.visible[i] ? 'active' : '';
+        html += '<button class="ts-author-btn ' + cls + '" data-idx="' + i + '" onclick="tsToggleAuthor(\'' + chartId + '\',' + i + ',this)">' +
+            '<span class="ts-dot" style="background:' + a.color + '"></span>' + a.name + '</button>';
+    });
+    bar.innerHTML = html;
+}
+
+function tsRender(chartId) {
+    const s = tsState[chartId];
+    const data = s.data;
+    const canvas = document.getElementById('ts-canvas-' + chartId);
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.parentElement.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) return; // hidden panel
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    const ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+    const W = rect.width;
+    const H = rect.height;
+
+    ctx.clearRect(0, 0, W, H);
+
+    const days = data.days;
+    if (days.length === 0) return;
+
+    const pad = { top: 20, right: 20, bottom: 40, left: 55 };
+    const plotW = W - pad.left - pad.right;
+    const plotH = H - pad.top - pad.bottom;
+
+    // Find max value among visible authors
+    let maxVal = 0;
+    data.authors.forEach((a, i) => {
+        if (!s.visible[i]) return;
+        const arr = s.metric === 'commits' ? a.commits : a.loc;
+        arr.forEach(v => { if (v > maxVal) maxVal = v; });
+    });
+    if (maxVal === 0) maxVal = 1;
+
+    // Grid lines
+    ctx.strokeStyle = '#1a1a25';
+    ctx.lineWidth = 1;
+    const gridLines = 5;
+    for (let i = 0; i <= gridLines; i++) {
+        const y = pad.top + plotH - (plotH * i / gridLines);
+        ctx.beginPath();
+        ctx.moveTo(pad.left, y);
+        ctx.lineTo(W - pad.right, y);
+        ctx.stroke();
+        // Y label
+        const val = Math.round(maxVal * i / gridLines);
+        ctx.fillStyle = '#8888a0';
+        ctx.font = '10px JetBrains Mono, monospace';
+        ctx.textAlign = 'right';
+        ctx.fillText(val.toLocaleString(), pad.left - 8, y + 3);
+    }
+
+    // X labels (show ~10 labels)
+    const step = Math.max(1, Math.floor(days.length / 10));
+    ctx.fillStyle = '#8888a0';
+    ctx.font = '9px JetBrains Mono, monospace';
+    ctx.textAlign = 'center';
+    for (let i = 0; i < days.length; i += step) {
+        const x = pad.left + (i / (days.length - 1 || 1)) * plotW;
+        const label = days[i].slice(5); // MM-DD
+        ctx.fillText(label, x, H - pad.bottom + 16);
+    }
+
+    // Draw lines
+    data.authors.forEach((a, ai) => {
+        if (!s.visible[ai]) return;
+        const arr = s.metric === 'commits' ? a.commits : a.loc;
+        ctx.strokeStyle = a.color;
+        ctx.lineWidth = 1.5;
+        ctx.globalAlpha = 0.85;
+        ctx.beginPath();
+        for (let i = 0; i < days.length; i++) {
+            const x = pad.left + (i / (days.length - 1 || 1)) * plotW;
+            const y = pad.top + plotH - (arr[i] / maxVal) * plotH;
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+    });
+
+    // Store layout for tooltip
+    s._layout = { pad, plotW, plotH, W, H, maxVal };
+}
+
+function tsMouseMove(chartId, e) {
+    const s = tsState[chartId];
+    if (!s._layout) return;
+    const canvas = document.getElementById('ts-canvas-' + chartId);
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const { pad, plotW } = s._layout;
+    const days = s.data.days;
+    if (days.length === 0) return;
+
+    const relX = mx - pad.left;
+    if (relX < 0 || relX > plotW) {
+        document.getElementById('ts-tooltip-' + chartId).style.display = 'none';
+        return;
+    }
+
+    const idx = Math.round((relX / plotW) * (days.length - 1));
+    if (idx < 0 || idx >= days.length) return;
+
+    const tooltip = document.getElementById('ts-tooltip-' + chartId);
+    let rows = '<div class="ts-tt-date">' + days[idx] + '</div>';
+    let hasData = false;
+    s.data.authors.forEach((a, ai) => {
+        if (!s.visible[ai]) return;
+        const arr = s.metric === 'commits' ? a.commits : a.loc;
+        const val = arr[idx];
+        if (val > 0) {
+            hasData = true;
+            rows += '<div class="ts-tt-row"><span class="ts-dot" style="background:' + a.color + '"></span>' +
+                a.name + ': ' + val.toLocaleString() + '</div>';
+        }
+    });
+
+    if (!hasData) {
+        tooltip.style.display = 'none';
+        return;
+    }
+
+    tooltip.innerHTML = rows;
+    tooltip.style.display = 'block';
+
+    const container = document.getElementById('ts-container-' + chartId);
+    const cRect = container.getBoundingClientRect();
+    let tx = mx + 12;
+    let ty = e.clientY - cRect.top - 10;
+    if (tx + tooltip.offsetWidth > cRect.width - 10) tx = mx - tooltip.offsetWidth - 12;
+    if (ty < 0) ty = 0;
+    tooltip.style.left = tx + 'px';
+    tooltip.style.top = ty + 'px';
+}
+
+// Initialize all charts on load
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.ts-chart-wrap[data-ts-id]').forEach(wrap => {
+        const chartId = wrap.getAttribute('data-ts-id');
+        const data = JSON.parse(wrap.getAttribute('data-ts-json'));
+        tsInit(chartId, data);
+    });
+});
+
+// Re-render on resize
+window.addEventListener('resize', () => {
+    for (const chartId in tsState) {
+        tsRender(chartId);
+    }
+});
 </script>
 </body>
 </html>

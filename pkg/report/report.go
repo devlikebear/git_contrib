@@ -2,6 +2,7 @@ package report
 
 import (
 	"embed"
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"os"
@@ -112,8 +113,48 @@ func Generate(outputPath string, data *analyzer.Report) error {
 			return s
 		},
 		"slugify": func(s string) string {
-			r := strings.NewReplacer(" ", "-", "/", "-", ".", "-")
+			r := strings.NewReplacer(" ", "_", "/", "_", ".", "_", "-", "_")
 			return r.Replace(strings.ToLower(s))
+		},
+		"timeseriesJSON": func(days []string, periodData []analyzer.AuthorPeriodData, palette []string, n int) template.HTMLAttr {
+			type authorSeries struct {
+				Name    string `json:"name"`
+				Color   string `json:"color"`
+				Commits []int  `json:"commits"`
+				LOC     []int  `json:"loc"`
+			}
+			type tsData struct {
+				Days    []string       `json:"days"`
+				Authors []authorSeries `json:"authors"`
+			}
+			top := periodData
+			if len(top) > n {
+				top = top[:n]
+			}
+			d := tsData{Days: days}
+			if d.Days == nil {
+				d.Days = []string{}
+			}
+			for i, apd := range top {
+				s := authorSeries{
+					Name:    apd.Author,
+					Color:   palette[i%len(palette)],
+					Commits: make([]int, len(days)),
+					LOC:     make([]int, len(days)),
+				}
+				for j, day := range days {
+					if e, ok := apd.Entries[day]; ok {
+						s.Commits[j] = e.Commits
+						s.LOC[j] = e.Additions + e.Deletions
+					}
+				}
+				d.Authors = append(d.Authors, s)
+			}
+			if d.Authors == nil {
+				d.Authors = []authorSeries{}
+			}
+			b, _ := json.Marshal(d)
+			return template.HTMLAttr(b)
 		},
 	}
 
