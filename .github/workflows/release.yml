@@ -55,7 +55,7 @@ jobs:
           for arch in arm64 amd64; do
             asset="git-contrib-v${VERSION}-darwin-${arch}.tar.gz"
             gh release download "v${VERSION}" \
-              --repo devlikebear/git_contrib \
+              --repo devlikebear/git-contrib \
               --pattern "${asset}" \
               --dir dist
             sha=$(sha256sum "dist/${asset}" | awk '{print $1}')

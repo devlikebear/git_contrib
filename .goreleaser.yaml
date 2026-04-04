@@ -41,12 +41,3 @@ release:
   draft: false
   prerelease: auto
 
-brews:
-  - repository:
-      owner: devlikebear
-      name: homebrew-tap
-    name: git-contrib
-    homepage: "https://github.com/devlikebear/git-contrib"
-    description: "Multi-repo Git contribution analyzer with HTML/JSON reports"
-    install: |
-      bin.install "git-contrib"
