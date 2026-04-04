@@ -37,6 +37,6 @@ changelog:
 release:
   github:
     owner: devlikebear
-    name: git-contrib
+    name: git_contrib
   draft: false
   prerelease: auto
