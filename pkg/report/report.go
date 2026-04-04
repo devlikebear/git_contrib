@@ -15,6 +15,25 @@ import (
 var templateFS embed.FS
 
 func Generate(outputPath string, data *analyzer.Report) error {
+	if strings.HasSuffix(outputPath, ".json") {
+		return generateJSON(outputPath, data)
+	}
+	return generateHTML(outputPath, data)
+}
+
+func generateJSON(outputPath string, data *analyzer.Report) error {
+	f, err := os.Create(outputPath)
+	if err != nil {
+		return fmt.Errorf("create output file: %w", err)
+	}
+	defer f.Close()
+
+	enc := json.NewEncoder(f)
+	enc.SetIndent("", "  ")
+	return enc.Encode(data)
+}
+
+func generateHTML(outputPath string, data *analyzer.Report) error {
 	funcMap := template.FuncMap{
 		"pct": func(val, max int) float64 {
 			if max == 0 {
